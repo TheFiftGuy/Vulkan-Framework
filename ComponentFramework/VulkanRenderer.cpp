@@ -132,7 +132,7 @@ void VulkanRenderer::initVulkan() {
     createImageViews(); 
     createRenderPass(); //a lot of settings to init and optimize for specific use.
     createDescriptorSetLayout();
-    createGraphicsPipeline();   //vert, frag, and a lot more - we can modify shader files (touch it - homework is to pass in spv file)
+    createGraphicsPipeline(VERT_PATH,FRAG_PATH);   //vert, frag, and a lot more - we can modify shader files (touch it - homework is to pass in spv file)
     createCommandPool();
     createDepthResources();
     createFramebuffers();
@@ -238,7 +238,7 @@ void VulkanRenderer::recreateSwapChain() {
     createSwapChain();
     createImageViews();
     createRenderPass();
-    createGraphicsPipeline();
+    createGraphicsPipeline(VERT_PATH,FRAG_PATH);
     createDepthResources();
     createFramebuffers();
     createUniformBuffers();
@@ -525,9 +525,9 @@ void VulkanRenderer::createDescriptorSetLayout() {
     }
 }
 
-void VulkanRenderer::createGraphicsPipeline() {
-    auto vertShaderCode = readFile("shaders/example27vert.spv");
-    auto fragShaderCode = readFile("shaders/example27frag.spv");
+void VulkanRenderer::createGraphicsPipeline(std::string vertShader_, std::string fragShader_) {
+    auto vertShaderCode = readFile(vertShader_);
+    auto fragShaderCode = readFile(fragShader_);
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);

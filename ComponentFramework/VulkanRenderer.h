@@ -180,6 +180,9 @@ private:
     std::string TEXTURE_PATH = "./textures/mario_mime.png";
     std::string MODEL_PATH = "./meshes/Mario.obj";
 
+    std::string VERT_PATH = "shaders/example27vert.spv";
+    std::string FRAG_PATH = "shaders/example27frag.spv";
+
     bool hasStencilComponent(VkFormat format);
 
     void initVulkan();
@@ -193,7 +196,7 @@ private:
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createRenderPass();
     void createDescriptorSetLayout();
-    void createGraphicsPipeline();
+    void createGraphicsPipeline(std::string vertShader_, std::string fragShader_);
     void createFramebuffers();
     void createCommandPool();
     void createDepthResources();
