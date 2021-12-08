@@ -10,7 +10,7 @@ private:
 
 	Matrix4 projection;
 	Matrix4 view;
-	Matrix4 rotate, translate;
+	//Matrix4 rotate, translate;
 	
 
 public:
@@ -19,6 +19,9 @@ public:
 
 	Matrix4 GetProjectionMatrix() const;
 	Matrix4 GetViewMatrix() const;
+
+	void SetProjectionMatrix(const Matrix4 projection_);
+	void SetViewMatrix(const Matrix4 view_);
 
 	
 };

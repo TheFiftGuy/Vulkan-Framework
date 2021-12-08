@@ -1220,18 +1220,14 @@ void VulkanRenderer::createSyncObjects() {
     }
 }
 
-void VulkanRenderer::LoadUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_) {
+void VulkanRenderer::SetUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_) {
     ubo.model = modelMatrix_;
     ubo.view = viewMatrix_;
     ubo.proj = projectionMatrix_;
 }
 
 void VulkanRenderer::updateUniformBuffer(uint32_t currentImage) {
-
-    float aspectRatio = static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
- 
-    ubo.proj[5] *= -1.0f; //this flips the Y axis from +Y=down, to +Y=Up - right image is default, we turned it into left image https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/coordinateDiagram.png
-
+   
     void* data;
     vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));

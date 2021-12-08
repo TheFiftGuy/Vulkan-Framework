@@ -1,5 +1,6 @@
 #ifndef SCENE0_H
 #define SCENE0_H
+#include "Matrix.h"
 #include "Scene.h"
 #include "Vector.h"
 #include "Renderer.h"
@@ -12,6 +13,8 @@ union SDL_Event;
 class Scene0 : public Scene {
 private:
 	Renderer *renderer;
+	class Camera* camera; //forward decleration included here
+	Matrix4 marioModelMatrix;
 	
 public:
 	explicit Scene0(Renderer* renderer_);

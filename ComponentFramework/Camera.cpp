@@ -1,8 +1,9 @@
 #include "Camera.h"
 
 Camera::Camera()   {
-    projection = MMath::perspective(45.0f, 1.77777f, 0.1f, 20.0f);
-	view = MMath::lookAt(Vec3(0.0f, 0.0f, -5.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
+    projection.loadIdentity();
+    view.loadIdentity();
+	
 }
 
 Camera::~Camera()   {
@@ -15,4 +16,12 @@ Matrix4 Camera::GetProjectionMatrix() const {
 
 Matrix4 Camera::GetViewMatrix() const   {
     return view;
+}
+
+void Camera::SetProjectionMatrix(const Matrix4 projection_)  {
+    projection = projection_;
+}
+
+void Camera::SetViewMatrix(const Matrix4 view_)   {
+    view = view_;
 }

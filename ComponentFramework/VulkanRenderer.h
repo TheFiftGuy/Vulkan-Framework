@@ -133,7 +133,8 @@ public:
     void OnDestroy();
     void Render();
 	
-    void LoadUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_);
+    void SetUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_);
+    SDL_Window* GetWindow() { return window; }
     
 
 private:
