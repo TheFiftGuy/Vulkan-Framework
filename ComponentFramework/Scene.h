@@ -1,11 +1,14 @@
 #ifndef SCENE_H
 #define SCENE_H
 #include "Renderer.h"
+
+#include "Camera.h"
+
 union SDL_Event;
 
 class Scene {
 public:
-	explicit Scene(Renderer* renderer_):renderer(nullptr){};
+	explicit Scene(Renderer* renderer_):renderer(nullptr), camera(nullptr) {}
 	virtual ~Scene() {}
 
 	virtual bool OnCreate() = 0;
@@ -15,5 +18,6 @@ public:
 	virtual void HandleEvents(const SDL_Event &sdlEvent) = 0;
 protected:
 	Renderer *renderer;
+	Camera* camera;
 };
 #endif

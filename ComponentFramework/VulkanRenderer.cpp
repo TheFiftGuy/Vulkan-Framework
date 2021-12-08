@@ -4,7 +4,7 @@
 #include "tiny_obj_loader.h"
 
 
-VulkanRenderer::VulkanRenderer(): /// Initialize all the variables
+VulkanRenderer::VulkanRenderer() : /// Initialize all the variables
     window(nullptr), instance(nullptr), debugMessenger(0), surface(0),commandPool(0),device(nullptr),graphicsPipeline(0),
     windowWidth(0), windowHeight(0),presentQueue(0),graphicsQueue(nullptr),pipelineLayout(0), renderPass(0), swapChain(0),
     swapChainExtent{},swapChainImageFormat{} {   
@@ -34,10 +34,10 @@ void VulkanRenderer::OnDestroy() {
 }
 
 void VulkanRenderer::Render() {
-    vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX); //https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitForFences.html
 
     uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex); //https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireNextImageKHR.html
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapChain();
@@ -126,23 +126,23 @@ void VulkanRenderer::initVulkan() {
     if (!SDL_Vulkan_CreateSurface(window, instance, &surface)) {
         throw std::runtime_error("failed to create window");
     }
-    pickPhysicalDevice();   //enumerates all GPUs on the system
-    createLogicalDevice();  //chooses the GPU and creates an abstract one to call
+    pickPhysicalDevice();   //enumerates all GPUs on the system and select one
+    createLogicalDevice();  //creates an abstract GPU from the chosen one to call
     createSwapChain();  //frame buffer stuff, changes how many buffers (double/triple/other...)
-    createImageViews(); 
-    createRenderPass(); //a lot of settings to init and optimize for specific use.
+    createImageViews(); //creating the image/objects
+    createRenderPass(); //a lot of settings to init and optimize for specific use cases
     createDescriptorSetLayout();
-    createGraphicsPipeline(VERT_PATH,FRAG_PATH);   //vert, frag, and a lot more - we can modify shader files (touch it - homework is to pass in spv file)
-    createCommandPool();
+    createGraphicsPipeline(VERT_PATH, FRAG_PATH);   //vertShader, fragShader, viewport, pipeline & more
+    createCommandPool();    //creates a list of commands for use when we only need to make minor changes to new frames, so we don't redo an entire render
     createDepthResources();
     createFramebuffers();
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
-    loadModel(MODEL_PATH.c_str());//
-    createVertexBuffer();
+    loadModel(MODEL_PATH.c_str());  //objLoading using tinyObj - gets rid of duplicate vertices.
+    createVertexBuffer(); //VAO & VBO stuff except its Vulkan
     createIndexBuffer();
-    createUniformBuffers();
+    createUniformBuffers(); //https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
     createDescriptorPool();
     createDescriptorSets();
     createCommandBuffers();
@@ -525,9 +525,9 @@ void VulkanRenderer::createDescriptorSetLayout() {
     }
 }
 
-void VulkanRenderer::createGraphicsPipeline(std::string vertShader_, std::string fragShader_) {
-    auto vertShaderCode = readFile(vertShader_);
-    auto fragShaderCode = readFile(fragShader_);
+void VulkanRenderer::createGraphicsPipeline(const std::string vertShaderFile_, const std::string fragShaderFile_) {
+    auto vertShaderCode = readFile(vertShaderFile_);
+    auto fragShaderCode = readFile(fragShaderFile_);
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -734,7 +734,7 @@ void VulkanRenderer::createTextureImage() {
 
     void* data;
     vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, image->pixels, static_cast<size_t>(imageSize));
+    memcpy(data, image->pixels, static_cast<size_t>(imageSize));//https://www.cplusplus.com/reference/cstring/memcpy/
     vkUnmapMemory(device, stagingBufferMemory);
 
   
@@ -985,7 +985,7 @@ void VulkanRenderer::createIndexBuffer() {
 }
 
 void VulkanRenderer::createUniformBuffers() {
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+    VkDeviceSize bufferSize = sizeof(UniformBufferObject);  //model->view->proj in that order
 
     uniformBuffers.resize(swapChainImages.size());
     uniformBuffersMemory.resize(swapChainImages.size());
@@ -1220,22 +1220,17 @@ void VulkanRenderer::createSyncObjects() {
     }
 }
 
+void VulkanRenderer::LoadUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_) {
+    ubo.model = modelMatrix_;
+    ubo.view = viewMatrix_;
+    ubo.proj = projectionMatrix_;
+}
+
 void VulkanRenderer::updateUniformBuffer(uint32_t currentImage) {
-    /// This is quick timer.  
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float elapsedTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-    UniformBufferObject ubo{};
     float aspectRatio = static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
-    
-    Matrix4 oriention = MMath::rotate(0.0f, Vec3(1.0f, 0.0f, 0.0f));
-
-    ubo.model = MMath::rotate(elapsedTime * 90.0f, Vec3(0.0f, 1.0f, 0.0f)) * oriention;
-    ubo.view = MMath::lookAt(Vec3(0.0f, 0.0f, -5.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
-    ubo.proj = MMath::perspective(45.0f, aspectRatio, 0.1f, 20.0f);
-    //ubo.proj[1][1] *= -1.0f;
-    ubo.proj[5] *= -1.0f;
+ 
+    ubo.proj[5] *= -1.0f; //this flips the Y axis from +Y=down, to +Y=Up - right image is default, we turned it into left image https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/coordinateDiagram.png
 
     void* data;
     vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);

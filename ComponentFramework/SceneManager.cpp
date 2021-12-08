@@ -7,10 +7,11 @@
 #include "Debug.h"
 
 
-SceneManager::SceneManager(): 
-	currentScene(nullptr), timer(nullptr),
-	fps(60), isRunning(false), rendererType(RendererType::VULKAN),
-	renderer(nullptr) {}
+SceneManager::SceneManager() : 
+	currentScene(nullptr), timer(nullptr), fps(60), isRunning(false), rendererType(RendererType::VULKAN), renderer(nullptr), camera(nullptr)
+{
+	
+}
 
 SceneManager::~SceneManager() {
 	if (currentScene) {
@@ -25,6 +26,8 @@ SceneManager::~SceneManager() {
 	}
 	renderer->OnDestroy();
 	delete renderer;
+	delete camera;
+	
 	Debug::Info("Deleting the GameSceneManager", __FILE__, __LINE__);
 
 }
@@ -48,8 +51,7 @@ bool SceneManager::Initialize(std::string name_, int width_, int height_) {
 		renderer->OnCreate();
 		break;
 
-	case RendererType::DIRECTX11:
-	case RendererType::DIRECTX12:
+	case RendererType::DIRECTX11:	case RendererType::DIRECTX12:	default:
 		Debug::FatalError("Renderer not supported", __FILE__, __LINE__);
 		return false;
 		break;

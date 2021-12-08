@@ -132,7 +132,8 @@ public:
     bool OnCreate();
     void OnDestroy();
     void Render();
-
+	
+    void LoadUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_);
     
 
 private:
@@ -183,6 +184,12 @@ private:
     std::string VERT_PATH = "shaders/example27vert.spv";
     std::string FRAG_PATH = "shaders/example27frag.spv";
 
+    UniformBufferObject ubo;
+
+ 
+
+	
+
     bool hasStencilComponent(VkFormat format);
 
     void initVulkan();
@@ -196,7 +203,7 @@ private:
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createRenderPass();
     void createDescriptorSetLayout();
-    void createGraphicsPipeline(std::string vertShader_, std::string fragShader_);
+    void createGraphicsPipeline(const std::string vertShaderFile_, const std::string fragShaderFile_);
     void createFramebuffers();
     void createCommandPool();
     void createDepthResources();

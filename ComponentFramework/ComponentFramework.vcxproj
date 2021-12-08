@@ -123,25 +123,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Hash.cpp" />
+    <ClCompile Include="MMath.cpp" />
     <ClCompile Include="OpenGLRenderer.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MMath.cpp" />
     <ClCompile Include="Scene0.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="VMath.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Hash.h" />
+    <ClInclude Include="Matrix.h" />
+    <ClInclude Include="MMath.h" />
     <ClInclude Include="OpenGLRenderer.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Matrix.h" />
-    <ClInclude Include="MMath.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Scene0.h" />

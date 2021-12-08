@@ -3,6 +3,8 @@
 
 #include <string>
 #include "Renderer.h"
+#include "Camera.h"
+
 class SceneManager  {
 public:
 	
@@ -30,6 +32,8 @@ private:
 	class Timer* timer;
 
 	Renderer* renderer;
+	Camera* camera;
+	
 	unsigned int fps;
 	bool isRunning;
 	void BuildScene(SCENE_NUMBER scene_);

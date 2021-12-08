@@ -42,9 +42,6 @@
     <ClCompile Include="Timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MMath.cpp">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
     <ClCompile Include="VMath.cpp">
       <Filter>Source Files\Math</Filter>
     </ClCompile>
@@ -63,6 +60,12 @@
     <ClCompile Include="Hash.cpp">
       <Filter>Source Files\Math</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MMath.cpp">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Debug.h">
@@ -70,12 +73,6 @@
     </ClInclude>
     <ClInclude Include="Timer.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Matrix.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="MMath.h">
-      <Filter>Header Files\Math</Filter>
     </ClInclude>
     <ClInclude Include="Plane.h">
       <Filter>Header Files\Math</Filter>
@@ -111,6 +108,15 @@
       <Filter>Header Files\Math</Filter>
     </ClInclude>
     <ClInclude Include="Vector.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MMath.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
   </ItemGroup>
