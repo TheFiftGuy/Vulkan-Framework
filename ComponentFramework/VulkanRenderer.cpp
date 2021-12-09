@@ -1306,7 +1306,7 @@ void VulkanRenderer::SetModelUBO(const Matrix4& modelMatrix_) {
 }
 
 void VulkanRenderer::SetLightUBO(const Vec4* lightPos_, const Vec4* specColor_, const Vec4* diffColor_, const int lightsInUse_) {
-    if (lightsInUse_ > 5 | lightsInUse_ == 0)   {
+    if (lightsInUse_ > 5 || lightsInUse_ == 0)   {
         Debug::Error("Incompatible number of lights in: ", __FILE__, __LINE__);
     }
 

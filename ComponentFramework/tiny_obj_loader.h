@@ -52,8 +52,16 @@ THE SOFTWARE.
 //   #include "tiny_obj_loader.h"
 //
 
+
+//Declan added: (removes warnings)
+#pragma warning( push )
+#pragma warning( disable : 4018 26495 26451 ) 
+//end, more at the end of file
+
 #ifndef TINY_OBJ_LOADER_H_
 #define TINY_OBJ_LOADER_H_
+
+
 
 #include <map>
 #include <string>
@@ -3093,3 +3101,5 @@ namespace tinyobj {
 
 #endif
 
+//Declan added - this and at the top remove warnings
+#pragma warning( pop )
