@@ -117,10 +117,10 @@ struct ModelUBO {
 };
 
 struct LightUBO {
-    Vec4 lightPos[5];
-    Vec4 specColor[5];
-    Vec4 diffColor[5];
-    int lightsInUse = 5;    //max 5
+    Vec4 lightPos[MAX_NUM_OF_LIGHTS];
+    Vec4 specColor[MAX_NUM_OF_LIGHTS];
+    Vec4 diffColor[MAX_NUM_OF_LIGHTS];
+    int lightsInUse = MAX_NUM_OF_LIGHTS;
 };
 
 struct CameraUBO {

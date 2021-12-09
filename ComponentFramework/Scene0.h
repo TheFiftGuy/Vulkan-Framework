@@ -11,15 +11,14 @@ using namespace MATH;
 /// Forward declarations 
 union SDL_Event;
 
-
 class Scene0 : public Scene {
 private:
 	Renderer *renderer;
 	class Camera* camera; //forward decleration included here
 	Matrix4 marioModelMatrix;
-	Vec4 lightPos[5];
-	Vec4 specColor[5];
-	Vec4 diffColor[5];
+	Vec4 lightPos[MAX_NUM_OF_LIGHTS];
+	Vec4 specColor[MAX_NUM_OF_LIGHTS];
+	Vec4 diffColor[MAX_NUM_OF_LIGHTS];
 	
 public:
 	explicit Scene0(Renderer* renderer_);

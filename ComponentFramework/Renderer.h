@@ -2,6 +2,11 @@
 #define RENDERER_H
 #include <SDL.h>
 #include <string>
+
+#ifndef MAX_NUM_OF_LIGHTS
+#define MAX_NUM_OF_LIGHTS 5 //when changing this number, dont forget to update the relevant shaders with the new number(multiPhong)
+#endif
+
 enum class RendererType {
 	NONE,
 	OPENGL,
