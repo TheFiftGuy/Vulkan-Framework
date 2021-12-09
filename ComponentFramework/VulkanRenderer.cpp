@@ -20,7 +20,7 @@ SDL_Window* VulkanRenderer::CreateWindow(std::string name_, int width_, int heig
     windowWidth = width_;
     windowHeight = height_;
     SDL_Init(SDL_INIT_VIDEO);
-    window = SDL_CreateWindow(name_.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_VULKAN);
+    window = SDL_CreateWindow(name_.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     return window;
 }
 
@@ -136,10 +136,10 @@ void VulkanRenderer::initVulkan() {
     createCommandPool();    //creates a list of commands for use when we only need to make minor changes to new frames, so we don't redo an entire render
     createDepthResources();
     createFramebuffers();
-    createTextureImage();
+    createTextureImage("textures/mario_mime.png");
     createTextureImageView();
     createTextureSampler();
-    loadModel(MODEL_PATH.c_str());  //objLoading using tinyObj - gets rid of duplicate vertices.
+    loadModel("meshes/Mario.obj");  //objLoading using tinyObj - gets rid of duplicate vertices.
     createVertexBuffer(); //VAO & VBO stuff except its Vulkan
     createIndexBuffer();
     createUniformBuffers(); //https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
@@ -723,8 +723,8 @@ bool VulkanRenderer::hasStencilComponent(VkFormat format) {
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-void VulkanRenderer::createTextureImage() {
-    SDL_Surface* image = IMG_Load(TEXTURE_PATH.c_str());
+void VulkanRenderer::createTextureImage(const char* textureFile) {
+    SDL_Surface* image = IMG_Load(textureFile);
     ///image->format
     VkDeviceSize imageSize = image->w * image->h * 4;
 
@@ -925,13 +925,15 @@ void VulkanRenderer::loadModel(const char* filename) {
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2]
             };
-
+            vertex.normal = {
+                attrib.normals[3 * index.normal_index + 0],
+                attrib.normals[3 * index.normal_index + 1],
+                attrib.normals[3 * index.normal_index + 2]
+            };
             vertex.texCoord = {
                 attrib.texcoords[2 * index.texcoord_index + 0],
                 1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
             };
-
-            vertex.color = { 1.0f, 1.0f, 1.0f };
 
             if (uniqueVertices.count(vertex) == 0) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
@@ -1053,7 +1055,7 @@ void VulkanRenderer::createDescriptorSets() {
         descriptorWrites[1].dstArrayElement = 0;
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = &imageInfo;
+        descriptorWrites[1].pImageInfo = &imageInfo; 	
 
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
@@ -1224,6 +1226,20 @@ void VulkanRenderer::SetUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatr
     ubo.model = modelMatrix_;
     ubo.view = viewMatrix_;
     ubo.proj = projectionMatrix_;
+    ubo.proj[5] *= -1.0f; //this flips the Y axis from +Y=down, to +Y=Up - right image is default before change https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/coordinateDiagram.png
+
+}
+
+void VulkanRenderer::SetLightUBO(const Vec4* lightPos_, const Vec4* specColor_, const Vec4* diffColor_) {
+    lightUbo.lightPos[0] = lightPos_[0];
+    lightUbo.lightPos[1] = lightPos_[1];
+	
+	lightUbo.specColor[0] = specColor_[0];
+    lightUbo.specColor[1] = specColor_[1];
+	
+    lightUbo.diffColor[0] = diffColor_[0];
+    lightUbo.diffColor[1] = diffColor_[1];
+	
 }
 
 void VulkanRenderer::updateUniformBuffer(uint32_t currentImage) {
@@ -1231,6 +1247,12 @@ void VulkanRenderer::updateUniformBuffer(uint32_t currentImage) {
     void* data;
     vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));
+
+	//this is probably nasty bad
+    void* data2;
+    vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(lightUbo), 0, &data2);
+    memcpy(data2, &lightUbo, sizeof(lightUbo));
+	
     vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 }
 

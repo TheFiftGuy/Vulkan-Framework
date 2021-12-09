@@ -5,6 +5,7 @@ layout (location = 1) in  vec4 vNormal;
 out vec3 vertNormal;
 out vec3 lightDir;
 out vec3 eyeDir; 
+
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;

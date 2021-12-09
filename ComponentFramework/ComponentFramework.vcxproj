@@ -158,7 +158,17 @@
     <Text Include="Graphics Game Engine_Log.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\example27.frag" />
+    <None Include="shaders\example27.vert" />
     <None Include="shaders\frag.spv" />
+    <None Include="shaders\multiPhong.frag" />
+    <None Include="shaders\multiPhong.vert" />
+    <None Include="shaders\phong.frag" />
+    <None Include="shaders\phong.vert" />
+    <None Include="shaders\simplePhong.frag" />
+    <None Include="shaders\simplePhong.vert" />
+    <None Include="shaders\simpleTexture.frag" />
+    <None Include="shaders\simpleTexture.vert" />
     <None Include="shaders\vert.spv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

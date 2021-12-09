@@ -1,5 +1,7 @@
 #ifndef SCENE0_H
 #define SCENE0_H
+#include <vector>
+
 #include "Matrix.h"
 #include "Scene.h"
 #include "Vector.h"
@@ -15,6 +17,9 @@ private:
 	Renderer *renderer;
 	class Camera* camera; //forward decleration included here
 	Matrix4 marioModelMatrix;
+	Vec4 lightPos[2];
+	Vec4 specColor[2];
+	Vec4 diffColor[2];
 	
 public:
 	explicit Scene0(Renderer* renderer_);

@@ -21,7 +21,6 @@ Scene0::~Scene0()	{
 }
 
 bool Scene0::OnCreate() {
-
 	
 	switch (renderer->getRendererType()){
 	case RendererType::VULKAN:	{
@@ -29,9 +28,18 @@ bool Scene0::OnCreate() {
 		SDL_GetWindowSize(dynamic_cast<VulkanRenderer*>(renderer)->GetWindow(), &width, &heigth);
 		float aspectRatio = static_cast<float>(width) / static_cast<float>(heigth);
 		Matrix4 proj = MMath::perspective(45.0f, aspectRatio, 0.1f, 20.0f);
-		proj[5] *= -1.0f; //this flips the Y axis from +Y=down, to +Y=Up - right image is default, we turned it into left image https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/coordinateDiagram.png
 		camera->SetProjectionMatrix(proj);
-		camera->SetViewMatrix(MMath::lookAt(Vec3(0.0f, 0.0f, -5.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f)));
+		camera->SetViewMatrix(MMath::lookAt(Vec3(0.0f, 0.0f, 5.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f)));
+		lightPos[0] = Vec4(-15.0f, 0.0f, -5.0f, 1.0f);
+		lightPos[1] = Vec4(15.0f, 0.0f, -5.0f, 1.0f);
+			
+		specColor[0] = Vec4(0.0f, 0.0f, 0.3f, 0.0f);
+		specColor[1] = Vec4(0.3f, 0.0f, 0.0f, 0.0f);
+			
+		diffColor[0] = Vec4(0.0f, 0.0f, 0.3f, 0.0f);
+		diffColor[1] = Vec4(0.3f, 0.0f, 0.0f, 0.0f);
+		
+			
 		}
 		break;
 
@@ -43,13 +51,28 @@ bool Scene0::OnCreate() {
 }
 
 void Scene0::HandleEvents(const SDL_Event &sdlEvent) {
+	if(sdlEvent.type == SDL_WINDOWEVENT)	{
+		//std::cout << "Window Event" << std::endl;
+
+		switch (sdlEvent.window.event)	{
+		case SDL_WINDOWEVENT_SIZE_CHANGED: {
+			std::cout << "Window changed size" << std::endl;
+			float aspectRatio = static_cast<float>(sdlEvent.window.data1) / static_cast<float>(sdlEvent.window.data2);
+			Matrix4 proj = MMath::perspective(45.0f, aspectRatio, 0.1f, 20.0f);
+			camera->SetProjectionMatrix(proj);
+			}
+			break;
+			
+		}
+		
+	}
 
 }
 
 void Scene0::Update(const float deltaTime) {
 	static float elapsedTime = 0.0f;
 	elapsedTime += deltaTime;
-	marioModelMatrix = MMath::rotate(elapsedTime * 90.0f, Vec3(0.0f, 1.0f, 0.0f));
+	marioModelMatrix = MMath::rotate(elapsedTime * 180.0f, Vec3(0.0f, 1.0f, 0.0f));
 }
 
 void Scene0::Render() const {
@@ -61,7 +84,9 @@ void Scene0::Render() const {
 		{
 			VulkanRenderer* vRenderer = dynamic_cast<VulkanRenderer*>(renderer);					
 			vRenderer->SetUBO(marioModelMatrix, camera->GetViewMatrix(), camera->GetProjectionMatrix()); //ubo.model gets changed in VulkanRenderer::updateUniformBuffer
+			vRenderer->SetLightUBO(lightPos, specColor, diffColor);
 			vRenderer->Render();
+			std::cout << "Scene0 render end" << std::endl;
 		}
 		break;
 

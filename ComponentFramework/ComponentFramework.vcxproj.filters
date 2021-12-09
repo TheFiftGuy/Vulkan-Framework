@@ -132,5 +132,35 @@
     <None Include="shaders\vert.spv">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\example27.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\example27.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\simpleTexture.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\simpleTexture.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\simplePhong.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\simplePhong.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\phong.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\phong.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\multiPhong.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\multiPhong.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -61,7 +61,7 @@ struct QueueFamilyIndices {
 
     struct Vertex {
         Vec3 pos;
-        Vec3 color;
+        Vec3 normal;
         Vec2 texCoord;
 
         static VkVertexInputBindingDescription getBindingDescription() {
@@ -83,7 +83,7 @@ struct QueueFamilyIndices {
             attributeDescriptions[1].binding = 0;
             attributeDescriptions[1].location = 1;
             attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            attributeDescriptions[1].offset = offsetof(Vertex, color);
+            attributeDescriptions[1].offset = offsetof(Vertex, normal);
 
             attributeDescriptions[2].binding = 0;
             attributeDescriptions[2].location = 2;
@@ -93,7 +93,7 @@ struct QueueFamilyIndices {
             return attributeDescriptions;
         }
         bool operator == (const Vertex& other) const {
-            return pos == other.pos && color == other.color && texCoord == other.texCoord;
+            return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
         }
         
     }; /// End of struct Vertex
@@ -103,7 +103,7 @@ struct QueueFamilyIndices {
         template<> struct hash<Vertex> {
             size_t operator()(Vertex const& vertex) const noexcept {
                 size_t hash1 = hash<Vec3>()(vertex.pos);
-                size_t hash2 = hash<Vec3>()(vertex.color);
+                size_t hash2 = hash<Vec3>()(vertex.normal);
                 size_t hash3 = hash<Vec2>()(vertex.texCoord);
                 size_t result = ((hash1 ^ (hash2 << 1)) >> 1) ^ (hash3 << 1);
                 return result;
@@ -116,6 +116,12 @@ struct UniformBufferObject {
     Matrix4 model;
     Matrix4 view;
     Matrix4 proj;
+};
+
+struct LightUBO {
+    Vec4 lightPos[2];
+    Vec4 specColor[2];
+    Vec4 diffColor[2];
 };
 
 class VulkanRenderer : public Renderer {
@@ -134,6 +140,8 @@ public:
     void Render();
 	
     void SetUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_);
+    void SetLightUBO(const Vec4* lightPos_, const Vec4* specColor_, const Vec4* diffColor_);
+	
     SDL_Window* GetWindow() { return window; }
     
 
@@ -179,13 +187,11 @@ private:
 
     bool framebufferResized = false;
 
-    std::string TEXTURE_PATH = "./textures/mario_mime.png";
-    std::string MODEL_PATH = "./meshes/Mario.obj";
-
-    std::string VERT_PATH = "shaders/example27vert.spv";
-    std::string FRAG_PATH = "shaders/example27frag.spv";
+    std::string VERT_PATH = "shaders/multiPhong.vert.spv"; //these need to be .spv files
+    std::string FRAG_PATH = "shaders/multiPhong.frag.spv";
 
     UniformBufferObject ubo;
+    LightUBO lightUbo;
 
  
 
@@ -208,7 +214,7 @@ private:
     void createFramebuffers();
     void createCommandPool();
     void createDepthResources();
-    void createTextureImage();
+    void createTextureImage(const char* textureFile);
     void createTextureImageView();
     void createTextureSampler();
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
