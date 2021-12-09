@@ -112,17 +112,22 @@ struct QueueFamilyIndices {
     }
 
  
-struct UniformBufferObject {
+struct ModelUBO {
     Matrix4 model;
+};
+
+struct LightUBO {
+    Vec4 lightPos[5];
+    Vec4 specColor[5];
+    Vec4 diffColor[5];
+    int lightsInUse = 5;    //max 5
+};
+
+struct CameraUBO {
     Matrix4 view;
     Matrix4 proj;
 };
 
-struct LightUBO {
-    Vec4 lightPos[2];
-    Vec4 specColor[2];
-    Vec4 diffColor[2];
-};
 
 class VulkanRenderer : public Renderer {
 public:
@@ -139,8 +144,10 @@ public:
     void OnDestroy();
     void Render();
 	
-    void SetUBO(const Matrix4& modelMatrix_, const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_);
-    void SetLightUBO(const Vec4* lightPos_, const Vec4* specColor_, const Vec4* diffColor_);
+    void SetModelUBO(const Matrix4& modelMatrix_);
+    void SetLightUBO(const Vec4* lightPos_, const Vec4* specColor_, const Vec4* diffColor_, const int lightsInUse_);
+    void SetCameraUBO(const Matrix4& viewMatrix_, const Matrix4& projectionMatrix_);
+   
 	
     SDL_Window* GetWindow() { return window; }
     
@@ -176,8 +183,14 @@ private:
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
 
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
+    std::vector<VkBuffer> modelUniformBuffers;
+    std::vector<VkBuffer> cameraUniformBuffers;
+    std::vector<VkBuffer> lightUniformBuffers;
+	
+    std::vector<VkDeviceMemory> modelUniformBuffersMemory;
+    std::vector<VkDeviceMemory> cameraUniformBuffersMemory;
+    std::vector<VkDeviceMemory> lightUniformBuffersMemory;
+	
     std::vector<VkCommandBuffer> commandBuffers;
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -190,8 +203,9 @@ private:
     std::string VERT_PATH = "shaders/multiPhong.vert.spv"; //these need to be .spv files
     std::string FRAG_PATH = "shaders/multiPhong.frag.spv";
 
-    UniformBufferObject ubo;
-    LightUBO lightUbo;
+    ModelUBO modelUBO;
+    LightUBO lightUBO;
+    CameraUBO cameraUBO;
 
  
 
@@ -206,7 +220,9 @@ private:
     void createSwapChain();
     void createImageViews();
     void recreateSwapChain();
-    void updateUniformBuffer(uint32_t currentImage);
+    void updateModelUniformBuffer(uint32_t currentImage);
+    void updateLightUniformBuffer(uint32_t currentImage);
+    void updateCameraUniformBuffer(uint32_t currentImage);
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createRenderPass();
     void createDescriptorSetLayout();
@@ -224,7 +240,9 @@ private:
         /// A helper function for createVertexBuffer()
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     void createIndexBuffer();
-    void createUniformBuffers();
+    void createModelUniformBuffers();
+    void createLightUniformBuffers();
+    void createCameralUniformBuffers();
     void createDescriptorPool();
     void createDescriptorSets();
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);

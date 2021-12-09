@@ -30,16 +30,26 @@ bool Scene0::OnCreate() {
 		Matrix4 proj = MMath::perspective(45.0f, aspectRatio, 0.1f, 20.0f);
 		camera->SetProjectionMatrix(proj);
 		camera->SetViewMatrix(MMath::lookAt(Vec3(0.0f, 0.0f, 5.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f)));
-		lightPos[0] = Vec4(-15.0f, 0.0f, -5.0f, 1.0f);
-		lightPos[1] = Vec4(15.0f, 0.0f, -5.0f, 1.0f);
 			
-		specColor[0] = Vec4(0.0f, 0.0f, 0.3f, 0.0f);
-		specColor[1] = Vec4(0.3f, 0.0f, 0.0f, 0.0f);
-			
-		diffColor[0] = Vec4(0.0f, 0.0f, 0.3f, 0.0f);
-		diffColor[1] = Vec4(0.3f, 0.0f, 0.0f, 0.0f);
+		lightPos[0] = Vec4(-15.0f, 0.0f, -5.0f, 1.0f);//left
+		lightPos[1] = Vec4(15.0f, 0.0f, -5.0f, 1.0f);//right
+		lightPos[2] = Vec4(0.0f, 15.0f, -5.0f, 1.0f);//up
+		lightPos[3] = Vec4(0.0f, -15.0f, -5.0f, 1.0f);//down
+		lightPos[4] = Vec4(0.0f, 0.0f, 10.0f, 1.0f);//front
 		
+		specColor[0] = Vec4(0.0f, 0.0f, 0.3f, 0.0f);//blue
+		specColor[1] = Vec4(0.3f, 0.0f, 0.0f, 0.0f);//red
+		specColor[2] = Vec4(0.0f, 0.3f, 0.0f, 0.0f);//green
+		specColor[3] = Vec4(0.3f, 0.3f, 0.0f, 0.0f);//yellow
+		specColor[4] = Vec4(0.3f, 0.0f, 0.3f, 0.0f);//purple
 			
+		diffColor[0] = Vec4(0.0f, 0.0f, 0.3f, 0.0f);//blue
+		diffColor[1] = Vec4(0.3f, 0.0f, 0.0f, 0.0f);//red
+		diffColor[2] = Vec4(0.0f, 0.3f, 0.0f, 0.0f);//green
+		diffColor[3] = Vec4(0.3f, 0.3f, 0.0f, 0.0f);//yellow
+		diffColor[4] = Vec4(0.3f, 0.3f, 0.0f, 0.0f);//yellow
+		
+		//using 4/5 lights	
 		}
 		break;
 
@@ -83,10 +93,11 @@ void Scene0::Render() const {
 		//Another solution is to initialize these before the switch, but we only need them for vulkan so that would be a waste
 		{
 			VulkanRenderer* vRenderer = dynamic_cast<VulkanRenderer*>(renderer);					
-			vRenderer->SetUBO(marioModelMatrix, camera->GetViewMatrix(), camera->GetProjectionMatrix()); //ubo.model gets changed in VulkanRenderer::updateUniformBuffer
-			vRenderer->SetLightUBO(lightPos, specColor, diffColor);
+			vRenderer->SetModelUBO(marioModelMatrix);
+			vRenderer->SetLightUBO(lightPos, specColor, diffColor, 5);
+			vRenderer->SetCameraUBO(camera->GetViewMatrix(), camera->GetProjectionMatrix());
 			vRenderer->Render();
-			std::cout << "Scene0 render end" << std::endl;
+			std::cout << "Scene0 Vulkan render end" << std::endl;
 		}
 		break;
 
