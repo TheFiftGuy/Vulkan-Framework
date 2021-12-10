@@ -146,7 +146,7 @@ void VulkanRenderer::initVulkan() {
     createTextureSampler();
 	
     loadModel("Mario", "meshes/Mario.obj");  //objLoading using tinyObj - gets rid of duplicate vertices.
-   // loadModel(Sphere, "meshes/Sphere.obj");
+	loadModel("Sphere", "meshes/Sphere.obj");
     
 
     createModelUniformBuffers(); //https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
@@ -155,6 +155,7 @@ void VulkanRenderer::initVulkan() {
     createDescriptorPool();
     createDescriptorSets();
     createCommandBuffers("Mario");
+    createCommandBuffers("Sphere");
     createSyncObjects();
 }
 
