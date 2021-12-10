@@ -98,7 +98,7 @@ struct QueueFamilyIndices {
         
     }; /// End of struct Vertex
 
-
+    //this lets u_map.count() check for Vertex==Vertex
     namespace std {
         template<> struct hash<Vertex> {
             size_t operator()(Vertex const& vertex) const noexcept {
@@ -154,8 +154,10 @@ public:
 
 private:
     const size_t MAX_FRAMES_IN_FLIGHT = 2;
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
+	
+    std::vector<Vertex> vertices[2];
+    std::vector<uint32_t> indices[2];
+	
     SDL_Event sdlEvent;
     uint32_t windowWidth;
     uint32_t windowHeight;
@@ -178,7 +180,10 @@ private:
 
     VkCommandPool commandPool;
 
-    VkBuffer vertexBuffer;
+    VkBuffer vertexBuffer[2];
+
+	enum Models {Mario, Sphere };
+
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
@@ -235,11 +240,11 @@ private:
     void createTextureSampler();
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
         VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-    void loadModel(const char* filename);
-    void createVertexBuffer();
+    void loadModel(Models model_, const char* filename);
+    void createVertexBuffer(Models model_);
         /// A helper function for createVertexBuffer()
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-    void createIndexBuffer();
+    void createIndexBuffer(Models model_);
     void createModelUniformBuffers();
     void createLightUniformBuffers();
     void createCameralUniformBuffers();
@@ -247,7 +252,7 @@ private:
     void createDescriptorSets();
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    void createCommandBuffers();
+    void createCommandBuffers(Models model_);
     void createSyncObjects();
     void cleanup();
     void cleanupSwapChain();

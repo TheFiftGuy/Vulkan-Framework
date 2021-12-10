@@ -97,7 +97,7 @@ void Scene0::Render() const {
 			vRenderer->SetLightUBO(lightPos, specColor, diffColor, 5);
 			vRenderer->SetCameraUBO(camera->GetViewMatrix(), camera->GetProjectionMatrix());
 			vRenderer->Render();
-			std::cout << "Scene0 Vulkan render end" << std::endl;
+			//std::cout << "Scene0 Vulkan render end" << std::endl;
 		}
 		break;
 
