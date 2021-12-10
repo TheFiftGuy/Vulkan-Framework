@@ -114,6 +114,7 @@ struct QueueFamilyIndices {
  
 struct ModelUBO {
     Matrix4 model;
+    	//maybe have included lightpos for older shaders
 };
 
 struct LightUBO {
@@ -126,6 +127,22 @@ struct LightUBO {
 struct CameraUBO {
     Matrix4 view;
     Matrix4 proj;
+};
+
+struct ModelVertexData  {
+    VkBuffer vertexBufferObject;
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indicesBufferObject;
+    VkDeviceMemory indicesBufferMemory;
+	
+};
+
+//not implemeted yet
+struct TextureData  {
+    VkSampler textureSampler;
+    VkImageView textureImageView;
+    VkImage textureImageObject;
+    VkDeviceMemory TextureImageMemory;
 };
 
 
@@ -153,10 +170,20 @@ public:
     
 
 private:
+    std::unordered_map<const char*, VkPipeline> pipelinesMap; //MultiLightShader is main shader
+    std::unordered_map<const char*, ModelVertexData> modelsMap;
+	
+	//Do we still need this?
+   /* VkBuffer vertexBuffer[2];
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;*/
+	
+	
     const size_t MAX_FRAMES_IN_FLIGHT = 2;
 	
-    std::vector<Vertex> vertices[2];
-    std::vector<uint32_t> indices[2];
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
 	
     SDL_Event sdlEvent;
     uint32_t windowWidth;
@@ -170,7 +197,7 @@ private:
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
+    
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
@@ -180,13 +207,11 @@ private:
 
     VkCommandPool commandPool;
 
-    VkBuffer vertexBuffer[2];
-
-	enum Models {Mario, Sphere };
-
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
+    
+    //this was in 1 class but then gone the next?
+	//enum Models {Mario, Sphere };
+	
+    
 
     std::vector<VkBuffer> modelUniformBuffers;
     std::vector<VkBuffer> cameraUniformBuffers;
@@ -231,7 +256,7 @@ private:
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createRenderPass();
     void createDescriptorSetLayout();
-    void createGraphicsPipeline(const std::string vertShaderFile_, const std::string fragShaderFile_);
+    void createGraphicsPipeline(const char* pipelineName_, const std::string vertShaderFile_, const std::string fragShaderFile_);
     void createFramebuffers();
     void createCommandPool();
     void createDepthResources();
@@ -239,12 +264,13 @@ private:
     void createTextureImageView();
     void createTextureSampler();
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
-        VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-    void loadModel(Models model_, const char* filename);
-    void createVertexBuffer(Models model_);
-        /// A helper function for createVertexBuffer()
-        uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-    void createIndexBuffer(Models model_);
+			VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+	
+    void loadModel(const char* modelName, const char* filename);
+
+    /// A helper function for createVertexBuffer()
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
     void createModelUniformBuffers();
     void createLightUniformBuffers();
     void createCameralUniformBuffers();
@@ -252,7 +278,7 @@ private:
     void createDescriptorSets();
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    void createCommandBuffers(Models model_);
+    void createCommandBuffers(const char* modelName);
     void createSyncObjects();
     void cleanup();
     void cleanupSwapChain();

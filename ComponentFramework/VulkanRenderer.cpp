@@ -6,7 +6,7 @@
 
 
 VulkanRenderer::VulkanRenderer() : /// Initialize all the variables
-    window(nullptr), instance(nullptr), debugMessenger(0), surface(0),commandPool(0),device(nullptr),graphicsPipeline(0),
+    window(nullptr), instance(nullptr), debugMessenger(0), surface(0),commandPool(0),device(nullptr), 
     windowWidth(0), windowHeight(0),presentQueue(0),graphicsQueue(nullptr),pipelineLayout(0), renderPass(0), swapChain(0),
     swapChainExtent{},  swapChainImageFormat{} {   
      
@@ -136,7 +136,8 @@ void VulkanRenderer::initVulkan() {
     createImageViews(); //creating the image/objects
     createRenderPass(); //a lot of settings to init and optimize for specific use cases
     createDescriptorSetLayout();
-    createGraphicsPipeline(VERT_PATH, FRAG_PATH);   //vertShader, fragShader, viewport, pipeline & more
+    createGraphicsPipeline("MultiLightShader", VERT_PATH, FRAG_PATH);   //vertShader, fragShader, viewport, pipeline & more
+    createGraphicsPipeline("OneLightShader", "shaders/simplePhong.vert.spv", "shaders/simplePhong.frag.spv");
     createCommandPool();    //creates a list of commands for use when we only need to make minor changes to new frames, so we don't redo an entire render
     createDepthResources();
     createFramebuffers();
@@ -144,17 +145,16 @@ void VulkanRenderer::initVulkan() {
     createTextureImageView();
     createTextureSampler();
 	
-    loadModel(Mario, "meshes/Mario.obj");  //objLoading using tinyObj - gets rid of duplicate vertices.
-    loadModel(Sphere, "meshes/Sphere.obj");
-    createVertexBuffer(Mario); //Load vertex onto GPU memory
-    createIndexBuffer(Mario); //Load Index onto GPU memory
-	
+    loadModel("Mario", "meshes/Mario.obj");  //objLoading using tinyObj - gets rid of duplicate vertices.
+   // loadModel(Sphere, "meshes/Sphere.obj");
+    
+
     createModelUniformBuffers(); //https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
     createLightUniformBuffers();
     createCameralUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
-    createCommandBuffers(Mario);
+    createCommandBuffers("Mario");
     createSyncObjects();
 }
 
@@ -171,7 +171,11 @@ void VulkanRenderer::cleanupSwapChain() {
 
     vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-    vkDestroyPipeline(device, graphicsPipeline, nullptr);
+	//for each pipeline in the map
+    for(std::pair<const char*, VkPipeline> element : pipelinesMap)   { //auto makes VKpipeline an int long long, which does work but no ty
+        vkDestroyPipeline(device, element.second, nullptr); //second is the pipeline
+    }
+	
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
 
@@ -207,12 +211,16 @@ void VulkanRenderer::cleanup() {
     vkFreeMemory(device, textureImageMemory, nullptr);
 
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+    //this?
+    for (std::pair<const char*, ModelVertexData> element : modelsMap)   {
+        vkDestroyBuffer(device, element.second.indicesBufferObject, nullptr);
+        vkFreeMemory(device, element.second.indicesBufferMemory, nullptr);
 
-    vkDestroyBuffer(device, indexBuffer, nullptr);
-    vkFreeMemory(device, indexBufferMemory, nullptr);
+        vkDestroyBuffer(device, element.second.vertexBufferObject, nullptr);
+        vkFreeMemory(device, element.second.vertexBufferMemory, nullptr);
+    }
+	
 
-    vkDestroyBuffer(device, vertexBuffer[0], nullptr);
-    vkFreeMemory(device, vertexBufferMemory, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -255,7 +263,7 @@ void VulkanRenderer::recreateSwapChain() {
     createSwapChain();
     createImageViews();
     createRenderPass();
-    createGraphicsPipeline(VERT_PATH,FRAG_PATH);
+    createGraphicsPipeline("MultiLightShader", VERT_PATH, FRAG_PATH); //to do stuff?
     createDepthResources();
     createFramebuffers();
     createModelUniformBuffers();
@@ -263,7 +271,7 @@ void VulkanRenderer::recreateSwapChain() {
     createLightUniformBuffers();	
     createDescriptorPool();
     createDescriptorSets();
-    createCommandBuffers(Mario);
+    createCommandBuffers("Mario");
 }
 
 void VulkanRenderer::createInstance() {
@@ -558,8 +566,11 @@ void VulkanRenderer::createDescriptorSetLayout() {
     }
 }
 
-void VulkanRenderer::createGraphicsPipeline(const std::string vertShaderFile_, const std::string fragShaderFile_) {
-    auto vertShaderCode = readFile(vertShaderFile_);
+void VulkanRenderer::createGraphicsPipeline(const char* pipelineName_, const std::string vertShaderFile_, const std::string fragShaderFile_) {
+
+	VkPipeline graphicsPipeline;
+	
+	auto vertShaderCode = readFile(vertShaderFile_);
     auto fragShaderCode = readFile(fragShaderFile_);
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
@@ -680,7 +691,7 @@ void VulkanRenderer::createGraphicsPipeline(const std::string vertShaderFile_, c
     if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
-
+    pipelinesMap[pipelineName_] = graphicsPipeline;
     vkDestroyShaderModule(device, fragShaderModule, nullptr);
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
@@ -937,7 +948,9 @@ void VulkanRenderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t 
     endSingleTimeCommands(commandBuffer);
 }
 
-void VulkanRenderer::loadModel(Models model_, const char* filename) {
+void VulkanRenderer::loadModel(const char* modelName, const char* filename) {
+    ModelVertexData modelData{};
+	
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -969,58 +982,71 @@ void VulkanRenderer::loadModel(Models model_, const char* filename) {
             };
 
             if (uniqueVertices.count(vertex) == 0) { //u_maps cannot have duplicates, so if count == 1 then there is already this vertex hash in the u_map
-                uniqueVertices[vertex] = static_cast<uint32_t>(vertices[model_].size());
-                vertices[model_].push_back(vertex);
+                uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                vertices.push_back(vertex);
             }
 
-            indices[model_].push_back(uniqueVertices[vertex]);
+            indices.push_back(uniqueVertices[vertex]);
         }
     }
-}
 
-void VulkanRenderer::createVertexBuffer(Models model_) {
-    VkDeviceSize bufferSize = sizeof(Vertex) * vertices[model_].size();
-
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-                                                                                                                      
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-        stagingBuffer, stagingBufferMemory);  // scott comment:these are being pulled in by reference, be constatant
-
-    void* data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices[model_].data(), (size_t)bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
-
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-        vertexBuffer[model_], vertexBufferMemory);
-
-    copyBuffer(stagingBuffer, vertexBuffer[model_], bufferSize);
-
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
-}
-
-void VulkanRenderer::createIndexBuffer(Models model_) {
-    VkDeviceSize bufferSize = sizeof(indices[model_]) * indices[model_].size();
+	//Now load all data to GPU
+	//
+	VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+	//VERTEX BUFFER
+    VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
 
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         stagingBuffer, stagingBufferMemory);
 
     void* data;
     vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indices[model_].data(), (size_t)bufferSize);
+    memcpy(data, vertices.data(), (size_t)bufferSize);
     vkUnmapMemory(device, stagingBufferMemory);
 
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        vertexBuffer, vertexBufferMemory);
+
+    copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+    stagingBuffer = 0; //just to make sure they are reset
+    stagingBufferMemory = 0;
+    //VERTEX BUFFER End
+
+	//INDICES BUFFER
+    bufferSize = sizeof(indices) * indices.size(); //reusing name but now for indices since we are done with vertex
+	
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        stagingBuffer, stagingBufferMemory);
+
+    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, indices.data(), (size_t)bufferSize); //access violation sometimes? program dies here
+    vkUnmapMemory(device, stagingBufferMemory);
+
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         indexBuffer, indexBufferMemory);
 
     copyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
     vkDestroyBuffer(device, stagingBuffer, nullptr);
     vkFreeMemory(device, stagingBufferMemory, nullptr);
+    //INDICES BUFFER end
+
+    modelData.vertexBufferObject = vertexBuffer;
+    modelData.vertexBufferMemory = vertexBufferMemory;
+    modelData.indicesBufferObject = indexBuffer;
+    modelData.indicesBufferMemory = indexBufferMemory;
+
+    modelsMap[modelName] = modelData;
+	
 }
 
 void VulkanRenderer::createModelUniformBuffers() {
@@ -1228,7 +1254,7 @@ uint32_t VulkanRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFla
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void VulkanRenderer::createCommandBuffers(Models model_) {
+void VulkanRenderer::createCommandBuffers(const char* modelName) {
     commandBuffers.resize(swapChainFramebuffers.size());
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -1270,17 +1296,17 @@ void VulkanRenderer::createCommandBuffers(Models model_) {
         vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     	//bind shaders
-        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelinesMap["MultiLightShader"]);
 
-    	VkBuffer vertexBuffers[] = { vertexBuffer[model_] };
+    	VkBuffer vertexBuffers[] = { modelsMap[modelName].vertexBufferObject };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-        vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffers[i], modelsMap[modelName].indicesBufferObject, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 
-        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices[0].size()), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     	//Done
         vkCmdEndRenderPass(commandBuffers[i]);
