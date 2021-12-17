@@ -134,7 +134,8 @@ struct ModelVertexData  {
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indicesBufferObject;
     VkDeviceMemory indicesBufferMemory;
-	
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
 };
 
 //not implemeted yet
@@ -181,9 +182,6 @@ private:
 	
 	
     const size_t MAX_FRAMES_IN_FLIGHT = 2;
-	
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
 	
     SDL_Event sdlEvent;
     uint32_t windowWidth;
@@ -278,7 +276,7 @@ private:
     void createDescriptorSets();
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    void createCommandBuffers(const char* modelName);
+    void createCommandBuffers(const char* modelName, const char* modelName2);
     void createSyncObjects();
     void cleanup();
     void cleanupSwapChain();

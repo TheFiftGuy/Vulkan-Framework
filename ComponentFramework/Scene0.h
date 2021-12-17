@@ -16,6 +16,7 @@ private:
 	Renderer *renderer;
 	class Camera* camera; //forward decleration included here
 	Matrix4 marioModelMatrix;
+	Matrix4 sphereModelMatrix;
 	Vec4 lightPos[MAX_NUM_OF_LIGHTS];
 	Vec4 specColor[MAX_NUM_OF_LIGHTS];
 	Vec4 diffColor[MAX_NUM_OF_LIGHTS];

@@ -18,6 +18,10 @@ Scene0::~Scene0()	{
 		delete camera;
 		camera = nullptr;
 	}
+	if(renderer != nullptr)	{
+		delete camera;
+		camera = nullptr;
+	}
 }
 
 bool Scene0::OnCreate() {
@@ -92,8 +96,10 @@ void Scene0::Render() const {
 		// {} makes all of these variables local to here, which is what we want anyway. if missing the switch statement wont compile
 		//Another solution is to initialize these before the switch, but we only need them for vulkan so that would be a waste
 		{
-			VulkanRenderer* vRenderer = dynamic_cast<VulkanRenderer*>(renderer);					
+			VulkanRenderer* vRenderer = dynamic_cast<VulkanRenderer*>(renderer);
+			vRenderer->SetModelUBO(sphereModelMatrix);
 			vRenderer->SetModelUBO(marioModelMatrix);
+			
 			vRenderer->SetLightUBO(lightPos, specColor, diffColor, 5);
 			vRenderer->SetCameraUBO(camera->GetViewMatrix(), camera->GetProjectionMatrix());
 			vRenderer->Render();

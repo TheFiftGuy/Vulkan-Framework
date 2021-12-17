@@ -144,18 +144,18 @@ void VulkanRenderer::initVulkan() {
     createTextureImage("textures/mario_mime.png");
     createTextureImageView();
     createTextureSampler();
-	
     loadModel("Mario", "meshes/Mario.obj");  //objLoading using tinyObj - gets rid of duplicate vertices.
-	loadModel("Sphere", "meshes/Sphere.obj");
-    
+    loadModel("Sphere", "meshes/Sphere.obj");
 
     createModelUniformBuffers(); //https://vulkan-tutorial.com/Uniform_buffers/Descriptor_layout_and_buffer
     createLightUniformBuffers();
     createCameralUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
-    createCommandBuffers("Mario");
-    createCommandBuffers("Sphere");
+    createCommandBuffers("Mario", "Sphere");
+    
+    
+    
     createSyncObjects();
 }
 
@@ -272,7 +272,8 @@ void VulkanRenderer::recreateSwapChain() {
     createLightUniformBuffers();	
     createDescriptorPool();
     createDescriptorSets();
-    createCommandBuffers("Mario");
+    createCommandBuffers("Mario", "Sphere");
+    
 }
 
 void VulkanRenderer::createInstance() {
@@ -957,6 +958,11 @@ void VulkanRenderer::loadModel(const char* modelName, const char* filename) {
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
+    //new temp
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+	
+
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename)) {
         throw std::runtime_error(warn + err);
     }
@@ -1045,6 +1051,8 @@ void VulkanRenderer::loadModel(const char* modelName, const char* filename) {
     modelData.vertexBufferMemory = vertexBufferMemory;
     modelData.indicesBufferObject = indexBuffer;
     modelData.indicesBufferMemory = indexBufferMemory;
+    modelData.vertices = vertices;
+    modelData.indices = indices;
 
     modelsMap[modelName] = modelData;
 	
@@ -1255,7 +1263,7 @@ uint32_t VulkanRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFla
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void VulkanRenderer::createCommandBuffers(const char* modelName) {
+void VulkanRenderer::createCommandBuffers(const char* modelName, const char* modelName2) {
     commandBuffers.resize(swapChainFramebuffers.size());
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -1268,6 +1276,7 @@ void VulkanRenderer::createCommandBuffers(const char* modelName) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
     //creates a commandbuffer for each swap chain. they each need their own even if its the same commands
+	
     for (size_t i = 0; i < commandBuffers.size(); i++) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1307,8 +1316,21 @@ void VulkanRenderer::createCommandBuffers(const char* modelName) {
 
         vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 
-        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        //uint32_t bob = static_cast<uint32_t>(modelsMap[modelName].indices.size());
+        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(modelsMap[modelName].indices.size()), 1, 0, 0, 0);
 
+    	//2nd time
+        VkBuffer vertexBuffers2[] = { modelsMap[modelName2].vertexBufferObject };
+        VkDeviceSize offsets2[] = { 0 };
+        vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers2, offsets2);
+
+        vkCmdBindIndexBuffer(commandBuffers[i], modelsMap[modelName2].indicesBufferObject, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
+
+        //uint32_t bob = static_cast<uint32_t>(modelsMap[modelName].indices.size());
+        vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(modelsMap[modelName2].indices.size()), 1, 0, 0, 0);
+    	
     	//Done
         vkCmdEndRenderPass(commandBuffers[i]);
 
